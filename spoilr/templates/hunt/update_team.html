@@ -1,0 +1,25 @@
+{% extends "submit/base.tmpl" %}
+
+{% load humanize %}
+
+{% block title %}Update Team &mdash; MIT Mystery Hunt 2021{% endblock %}
+
+{% block submit_content %}
+<p>
+  Your team email will be used to provide your team with status updates and other information throughout the course of the hunt.<br>
+  Your contact phone will be used to reach you for more time-sensitive information. Please keep it up to date.
+</p>
+{% if not team.is_limited %}
+<form method="POST" class="submit-form">
+  {% csrf_token %}
+  Team Email: <input type="email" name="email" value="{{ team.email }}"><br>
+  Contact Phone: <input type="phone" name="phone" value="{{ team.phone }}"><br>
+  <input id="submit" type="submit" value="Update">
+</form>
+{% if status %}
+<div class="submit-response">
+  {{ status|safe }}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

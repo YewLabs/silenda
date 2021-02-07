@@ -1,0 +1,98 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=1200, user-scalable=yes"></meta>
+  <link rel="icon" href="{% static 'favicon_alt.ico' %}" type="image/vnd.microsoft.icon">
+  <title>{% block title %}{{ title }}{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'stylesheets/main.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'stylesheets/metropolis-font.css' %}">
+  <script src="{% static 'scripts/jquery.min.js' %}"></script>
+  <script src="{% static 'scripts/sorttable.js' %}"></script>
+  <script src="{% static 'grid_copy.js' %}?rand={{ rand }}"></script>
+  <script src="{% static 'scripts/copyjack.js' %}"></script>
+  {% block stylesheets %}
+  {% endblock %}
+  <script id="check_answer">
+      window.onload=function() {
+      form = document.getElementsByClassName('call-in-answer-panel inline-form')[0]
+      form.onsubmit=function() {
+        right_answer = '{{ normalized_answer }}'
+        answer = document.getElementById('id_answer').value
+        answer = normalize_puzzle_answer(answer)
+
+        // Remove solved panel if it exists
+        if (document.contains(document.getElementById('solved-panel'))) {
+          document.getElementById("solved-panel").remove();
+        }
+
+        // Create new solved panel
+        node = document.createElement('div')
+        node.setAttribute('id', 'solved-panel')
+        if (answer == normalize_puzzle_answer(right_answer)) {
+          node.setAttribute('class', 'solved-panel')
+          node.innerHTML = "<h3>Solved!</h3>\n<p>The answer was <b>"
+            + right_answer
+            + "</b>.</p>\n<p><a href=\"{% url 'solution' puzzle_slug %}\">View Solution</a></p>"
+            + "<p>Please leave feedback on <a href=\"https://puzzlord.vero.site/puzzle/{{ puzzlord_id }}\">Puzzlord.</a></p>"
+        } else {
+          node.setAttribute('class', 'solved-panel solved-panel--incorrect')
+          node.innerHTML = "<h3>Incorrect!</h3>"
+        }
+
+        // Inject it
+        form.parentNode.insertBefore(node, form.nextSibling)
+
+        // Return false to prevent GET request from executing
+        return false;
+      }
+
+      if (typeof puzzleOnLoad !== 'undefined') {
+        puzzleOnLoad();
+      }
+    }
+
+    function normalize_puzzle_answer(answer) {
+      return answer.toUpperCase().replace(/[^A-Z]/g, '')
+    }
+  </script>
+</head>
+
+<body>
+  <div class="content">
+    <h1>{{ title }}</h1>
+
+    <main>
+      <div class="puzzle-header">
+        <div>
+          <form class="call-in-answer-panel inline-form">
+            <label for="id_answer">Enter your answer guess:</label>
+            <input id="id_answer" maxlength="500" name="answer" type="text" required />
+            <input class="submit-button" type="submit" value="Submit">
+          </form>
+        </div>
+        {% if has_posthunt %}
+        <div>
+          <a href="{% url 'posthunt' puzzle_slug %}">View post-hunt version</a>
+        </div>
+        {% elif has_hunt %}
+        <div>
+          <a href="{% url 'puzzle' puzzle_slug %}">View hunt version</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class='puzzle'>
+        <!-- Puzzle content begins here -->
+        {{ index_html|safe }}
+        <!-- Puzzle content ends here -->
+      </div>
+    </main>
+  </div>
+
+  {% block javascripts %}{% endblock %}
+</body>
+</html>

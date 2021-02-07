@@ -1,0 +1,28 @@
+runtime: custom
+env: flex
+entrypoint: daphne -b 0.0.0.0 -p $PORT silenda.asgi:application
+service: silenda-backend
+
+beta_settings:
+  cloud_sql_instances: <CLOUD_SQL_INSTANCE>
+
+automatic_scaling:
+  min_num_instances: 2
+  max_num_instances: 2
+
+resources:
+  cpu: 4
+  memory_gb: 8
+  disk_size_gb: 20
+
+network:
+  session_affinity: true
+
+env_variables:
+  DJANGO_ENV: "gae_flex"
+
+runtime_config:
+  python_version: 3
+
+readiness_check:
+  app_start_timeout_sec: 1200

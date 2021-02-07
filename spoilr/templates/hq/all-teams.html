@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+{% load static %}
+{% load spacelesser %}
+<html>
+  <head>
+    <title>All Teams Dashboard</title>
+    <style>
+body {
+  font: 12px monospace;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td {
+  padding: 5px;
+  max-width: 500px;
+  vertical-align: top;
+}
+
+.solved {
+  background: #dfd;
+}
+
+.blocks {
+  word-break: break-all;
+}
+
+.blocks .r {
+  font-size: 200%;
+}
+    </style>
+    <script>
+const ALL = {
+  i: { {% for i in all_interaction %}{{ i.id }}:'{{ i.name|escapejs }}',{% endfor %} },
+  p: { {% for p in all_puzzle %}{{ p.id }}:'{{ p.name|escapejs }}',{% endfor %} },
+};
+const IMG = {
+  s: '✅',
+  f: '❌',
+  r: '❗',
+  u: '❔',
+};
+function decode(elt) {
+  for (const blocks of document.querySelectorAll(`#${elt} .blocks`)) {
+    const specs = blocks.textContent;
+    blocks.textContent = '';
+    for (const spec of specs.split(' ')) {
+      if (!spec) continue;
+      const id = spec.substr(3);
+      const span = document.createElement('span');
+      span.setAttribute('title', ALL[spec[0]][id]);
+      span.setAttribute('class', spec[1]);
+      span.textContent = IMG[spec[2]];
+      blocks.appendChild(span);
+    }
+  }
+}
+    </script>
+  </head>
+  <body>
+    {% include "hq/topright.html" with auto_refresh=True unchecked=False interval=30000 %}
+    {{ teams|length }} teams,
+    {{ r_total }} rounds,
+    {{ p_total }} puzzles,
+    {{ i_total }} interactions<br>
+    {{ i_pending }} pending interactions among {{ i_teams }} teams //
+    {{ q_total }} queue entries among {{ q_teams }} teams<br>
+    P=Puzzles (solved/found/released/total (open))
+    Q=Queue entries
+    S=Puzzles surveyed
+    {% for team in teams %}
+    <hr>
+    <table id="team{{ team.team.id }}">
+      {% spacelesser %}
+      <tr>
+        <td colspan="2">
+          {{ forloop.counter }})&nbsp;
+          <a href="{% url 'one_team' team.team.url %}">
+            <b>{{ team.team.name|truncatechars:40 }}</b>
+          </a><br>
+          P:<b>{{ team.p_solved }}</b>/{{ team.p_found }}/{{ team.p_released }}/{{ p_total }}
+          ({{ team.p_open }})<br>
+          JUICE: {{ team.team.y2021teamdata.base_juice }}<br>
+          Q:<b>{{ team.q_submissions }}</b>&nbsp;S:<b>{{ team.p_surveyed }}</b>
+        </td>
+        <td><i>Interactions:</i></td>
+        <td class="blocks">{{ team.interactions|join:" " }}</td>
+        <td colspan="4">
+          <a href="{% url 'hq_log' %}#\b{{ team.team.url }}\b">{{ team.log1.timestamp|date:'D H:i:s' }}: {{ team.log1.message }}</a>
+        </td>
+      </tr>
+      <tr>
+        {% for round in team.rounds %}
+        <td{% if round.solved %} class="solved"{% endif %}>
+          <i>{{ round.round.name }}:</i><br>
+          <b>{{ round.num_solved }}</b>/{{ round.num_found }}/{{ round.num_released }}/{{ round.puzzles|length }}<br>
+          {% if round.juice is not None %}{{ round.juice }} JUICE{% endif %}
+        </td>
+        <td class="blocks{% if round.solved %} solved{% endif %}">{{ round.puzzles|join:" " }}</td>
+        {% autoescape off %}{% cycle '' '' '' '</tr><tr>' %}{% endautoescape %}
+        {% endfor %}
+        {% resetcycle %}
+      </tr>
+      {% endspacelesser %}
+    </table>
+    <script>decode('team{{ team.team.id }}');</script>
+    {% endfor %}
+  </body>
+</html>

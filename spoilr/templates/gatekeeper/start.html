@@ -1,0 +1,121 @@
+{% load humanize %}
+<html>
+  <head>
+    <title>Gatekeeper</title>
+    <script>
+      function confirmGatekeeper(action) {
+        var msg = 'Do you really want to ' + action + '?';
+        if (action == "release") {
+          var interaction = document.getElementById("release-interaction").value;
+          msg = 'Do you really want to release "' + interaction + '" for all teams?';
+        } else if (action == "complete") {
+          var interaction = document.getElementById("complete-interaction").value;
+          msg = 'Do you really want to complete "' + interaction + '" for all teams?';
+        } else if (action == "complete-quiet") {
+          var interaction = document.getElementById("complete-interaction-quiet").value;
+          msg = 'Do you really want to complete "' + interaction + '" for all teams?';
+        }
+        return confirm(msg);
+      }
+    </script>
+  </head>
+  <body>
+    <h3>Admin actions (be very very careful)</h3>
+    <p>
+      <form action="{% url 'gatekeeper_unlock_mmo' %}" method="GET" onsubmit='return confirmGatekeeper("unlock the MMO");'>
+        {% csrf_token %}
+        <b>Unlock MMO</b><br>
+        &nbsp;&nbsp;&nbsp;
+        <input type="hidden" name="unlock" value="1">
+        <input type="submit" value="Unlock">
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_release_interactions' %}" method="GET" onsubmit='return confirmGatekeeper("release");'>
+        {% csrf_token %}
+        <b>Globally Release Interaction</b>
+        <i>(done/queued/others)</i></br>
+        <input type="hidden" name="release" value="1">
+        <select id="release-interaction" name="interaction">
+          {% for i in interactions %}
+          <option value="{{i.interaction.url}}">{{i.interaction.name }} ({{ i.done }}/{{ i.queued }}/{{ i.rest }})</option>
+          {% endfor %}
+        </select>
+        <input type="submit" value="Release">
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_complete_interactions' %}" method="GET" onsubmit='return confirmGatekeeper("complete");'>
+        {% csrf_token %}
+        <b>Globally Complete Interaction</b>
+        <i>(done/queued/others)</i></br>
+        <input type="hidden" name="complete" value="1">
+        <select id="complete-interaction" name="interaction">
+          {% for i in interactions %}
+          <option value="{{i.interaction.url}}">{{i.interaction.name }} ({{ i.done }}/{{ i.queued }}/{{ i.rest }})</option>
+          {% endfor %}
+        </select>
+        <input type="submit" value="Complete">
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_quiet_complete_interactions' %}" method="GET" onsubmit='return confirmGatekeeper("complete-quiet");'>
+        {% csrf_token %}
+        <b>Globally Quiet Complete Interaction</b>
+        <i>(done/queued/others)</i></br>
+        <input type="hidden" name="complete" value="1">
+        <select id="complete-interaction-quiet" name="interaction">
+          {% for i in interactions %}
+          <option value="{{i.interaction.url}}">{{i.interaction.name }} ({{ i.done }}/{{ i.queued }}/{{ i.rest }})</option>
+          {% endfor %}
+        </select>
+        <input type="submit" value="Complete">
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_nuke_cache' %}" method="GET" onsubmit='return confirmGatekeeper("nuke the cache");'>
+        {% csrf_token %}
+        <b>Nuke Cache</b><br>
+        &nbsp;&nbsp;&nbsp;
+        <input type="hidden" name="nuke_cache" value="1">
+        <input type="submit" value="Nuke Cache">
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_force_unlock' %}" method="GET" onsubmit='return confirmGatekeeper("force update all puzzle unlocks");'>
+        {% csrf_token %}
+        <b>Force Unlocks</b><br>
+        &nbsp;&nbsp;&nbsp;
+        <input type="hidden" name="unlock" value="1">
+        <input type="submit" value="Unlock">
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_disable_mmo' %}" method="GET" onsubmit='return confirmGatekeeper("disable the MMO");'>
+        {% csrf_token %}
+        <b>Disable MMO</b><br>
+        &nbsp;&nbsp;&nbsp;
+        <input type="hidden" name="disable" value="1">
+        <input type="submit" value="Disable" disabled=1>
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_prelaunch' %}" method="GET" onsubmit='return confirmGatekeeper("prelaunch Hunt");'>
+        {% csrf_token %}
+        <b>Prelaunch Hunt</b><br>
+        &nbsp;&nbsp;&nbsp;
+        <input type="hidden" name="prelaunch" value="1">
+        <input type="submit" value="Prelaunch">
+      </form>
+    </p>
+    <p>
+      <form action="{% url 'gatekeeper_launch' %}" method="GET" onsubmit='return confirmGatekeeper("launch Hunt");'>
+        {% csrf_token %}
+        <b>Launch Hunt</b><br>
+        &nbsp;&nbsp;&nbsp;
+        <input type="hidden" name="launch" value="1">
+        <input type="submit" value="Launch">
+      </form>
+    </p>
+  </body>
+</html>

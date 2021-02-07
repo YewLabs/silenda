@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+  <head>
+    <title>All Puzzles Dashboard</title>
+    <style>
+body { font: 10pt monospace; }
+table { border-collapse: collapse; }
+th { text-align: left; }
+.f { padding: 0px 5px; }
+.n { text-align: right; }
+.d { text-align: right; }
+.p { text-align: right; padding: 0px 5px; }
+.p_unreleased { background: #eee; color: #666; }
+.p_no_data { background: #fff; }
+.p_good { background: #efe; }
+.p_meh { background: #ffe; }
+.g { width: 100px; padding: 0px 15px 0px 0px; }
+.gb { height: 5px; background: steelblue linear-gradient(black, black) no-repeat; }
+.h { border-top: 1px solid black; background: #eee; }
+.a:not(:hover) { opacity: 0.5; }
+    </style>
+  </head>
+  <body>
+    {% include "hq/topright.html" with auto_refresh=True unchecked=False interval=30000 %}
+    <table>
+      <tr>
+        <td>{{ t_total }} teams, {{ i_total }} interactions</td>
+        <td>Overall released:</td>
+        <td class="n">{{ p_released }}</td>
+        <td>/</td>
+        <td class="d">{{ p_total }}</td>
+        <td class="p">{{ p_releasedp }}%</td>
+        <td colspan="7"><div class="gb" style="background-size: {{ p_releasedp }}% 100%"></div></td>
+      </tr>
+      <tr>
+        <td>{{ p_total }} puzzles</td>
+        <td>Overall found:</td>
+        <td class="n">{{ p_found }}</td>
+        <td>/</td>
+        <td class="d">{{ p_total }}</td>
+        <td class="p">{{ p_foundp }}%</td>
+        <td colspan="7"><div class="gb" style="background-size: {{ p_foundp }}% 100%"></div></td>
+      </tr>
+      <tr>
+        <td>{{ m_total }} metas</td>
+        <td>Overall solved:</td>
+        <td class="n">{{ p_solved }}</td>
+        <td>/</td>
+        <td class="d">{{ p_total }}</td>
+        <td class="p">{{ p_solvedp }}%</td>
+        <td colspan="7"><div class="gb" style="background-size: {{ p_solvedp }}% 100%"></div></td>
+      </tr>
+      <tr>
+        <th>Name</th>
+        <th class="f">First Release</th>
+        <th colspan="5">Releases</th>
+        <th colspan="5">Found</th>
+        <th colspan="5">Solves</th>
+        <th>Surveys</th>
+      </tr>
+      {% for round in rounds %}
+      <tr class="h">
+        <td>
+          {% if 'round' in round %}
+          <a href="{% url 'round_view' round.round.url %}">{{ round.round.name }}</a>
+          {% else %}
+          {{ round.name }}
+          {% endif %}
+        </td>
+        <td colspan="12"></td>
+      </tr>
+      {% for puzzle in round.puzzles %}
+      <tr class={% if puzzle.released %}{% if puzzle.solvedp != '-' %}{% if puzzle.solvedp >= 20 %}p_good{% else %}p_meh{% endif %}{% else %}p_nodata{% endif %}{% else %}p_unreleased{% endif %}>
+        <td>
+          {% if 'round' in round %}
+          <a class="a" href="{% url 'puzzle_view' puzzle.puzzle.url %}">{% if puzzle.puzzle.is_meta %}<b>{% endif %}{{ puzzle.puzzle.name|truncatechars:40 }}{% if puzzle.puzzle.is_meta %}</b>{% endif %}</a>
+          {% else %}
+          {{ puzzle.puzzle.name|truncatechars:40 }}
+          {% endif %}
+        </td>
+        <td class="f">{% if 'first' in puzzle %}{{ puzzle.first|date:'D H:i' }}{% endif %}</td>
+        <td class="n">{{ puzzle.released }}</td>
+        <td>/</td>
+        <td class="d">{{ t_total }}</td>
+        <td class="p">{% if puzzle.releasedp != '-' %}{{ puzzle.releasedp }}%{% else %}-{% endif %}</td>
+        <td class="g">{% if puzzle.releasedp != '-' %}<div class="gb" style="width: {{ puzzle.releasedp }}px"></div>{% else %}-{% endif %}</td>
+        <td class="n">{{ puzzle.found }}</td>
+        <td>/</td>
+        <td class="d">{{ puzzle.released }}</td>
+        <td class="p">{% if puzzle.foundp != '-' %}{{ puzzle.foundp }}%{% else %}-{% endif %}</td>
+        <td class="g">{% if puzzle.foundp != '-' %}<div class="gb" style="width: {{ puzzle.foundp }}px"></div>{% else %}-{% endif %}</td>
+        <td class="n">{{ puzzle.solved }}</td>
+        <td>/</td>
+        <td class="d">{{ puzzle.found }}</td>
+        <td class="p">{% if puzzle.solvedp != '-' %}{{ puzzle.solvedp }}%{% else %}-{% endif %}</td>
+        <td class="g">{% if puzzle.solvedp != '-' %}<div class="gb" style="width: {{ puzzle.solvedp }}px"></div>{% else %}-{% endif %}</td>
+        <td>{% if 'surveys' in puzzle %}{{ puzzle.surveys }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+    </table>
+  </body>
+</html>

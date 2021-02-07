@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Event Log</title>
+    <style>
+body {
+  font: 10pt Verdana;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+td, th {
+  padding: 2px 8px;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 10px;
+}
+    </style>
+  </head>
+  <body>
+    {% include "hq/topright.html" with auto_refresh=True unchecked=False interval=30000 %}
+    Filter: <input id="filter">
+    {% if limit %}
+    <b>This is the short log</b>, for the full log see <a href="{% url 'hq_log' %}">here</a>.<br>
+    {% endif %}
+    <script>
+const element = document.getElementById('filter');
+element.value = decodeURIComponent(location.hash.replace(/^#/, ''));
+    </script>
+    <table id="entries">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Team URL</th>
+          <th>Message</th>
+          <th>Event Type</th>
+          <th>Object ID</th>
+        </tr>
+      </thead>
+      {% for e in entries %}
+      <tr class="entry">
+<td>{{ e.timestamp|date:'D H:i:s' }}</td>
+<td>{% if e.team %}{{ e.team.url }}{% endif %}</td>
+<td>{{ e.message|safe }}</td>
+<td>{{ e.event_type }}</td>
+<td>{{ e.object_id }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <script>
+function applyFilter() {
+  const re = element.value && new RegExp(element.value, 'ims');
+  for (const row of document.getElementById('entries').tBodies[0].rows)
+    row.style.display = (!re || re.test(row.textContent)) ? '' : 'none';
+}
+element.addEventListener('input', () => {
+  history.replaceState(null, '', element.value ? '#' + element.value : '.');
+  applyFilter();
+});
+if (element.value) {
+  element.focus();
+  applyFilter();
+}
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+<div style="float: right; text-align: right;">
+  <a href="{% url 'hq' %}">Back to HQ Main</a>
+  {% if auto_refresh %}
+  <form>
+    <label for="auto-refresh">
+      (auto-refresh:<input id="auto-refresh" type="checkbox" name="auto-refresh" {% if not unchecked %} checked {% endif %}/>)
+    </label>
+  </form>
+  <script type="text/javascript">
+      function ignoreEnter(e){
+        if (e.which == 13) {
+          return false;
+        }
+      }
+
+      function r() {
+        var ae = document.activeElement;
+        if ((ae.nodeName == 'INPUT' || ae.nodeName == 'SELECT') && ae.id != "auto-refresh")
+          return;
+        if (document.getElementById('auto-refresh').checked)
+          window.location.reload(true);
+      }
+      setInterval(r, {{interval|default:30000}});
+    </script>
+  {% endif %}
+</div>

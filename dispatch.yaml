@@ -1,0 +1,13 @@
+dispatch:
+  - url: "perpendicular.institute/ws/tempest/"
+    service: silenda-tempest
+  - url: "perpendicular.institute/ws/team"
+    service: default
+  - url: "perpendicular.institute/ws/*"
+    service: silenda-backend
+  - url: "perpendicular.institute/hq/*"
+    service: silenda-hq
+  - url: "perpendicular.institute/admin/*"
+    service: silenda-hq
+  - url: "perpendicular.institute/*"
+    service: silenda-standard

@@ -1,0 +1,26 @@
+runtime: python38
+service: silenda-standard
+
+instance_class: F4_1G
+
+env_variables:
+  DJANGO_ENV: "gae_standard"
+
+handlers:
+- url: /static
+  static_dir: static/
+  secure: always
+
+- url: /.*
+  script: auto
+  secure: always
+
+inbound_services:
+- warmup
+
+automatic_scaling:
+  min_idle_instances: 1
+  max_instances: 100
+
+vpc_access_connector:
+  name: <VPC_CONNECTOR>

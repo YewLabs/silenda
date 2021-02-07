@@ -1,0 +1,42 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=1200, user-scalable=yes"></meta>
+  <link rel="icon" href="{% static 'favicon_alt.ico' %}" type="image/vnd.microsoft.icon">
+  <title>{% block title %}{{ title }}{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'stylesheets/main.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'stylesheets/metropolis-font.css' %}">
+  <script src="{% static 'scripts/jquery.min.js' %}"></script>
+  <script src="{% static 'scripts/sorttable.js' %}"></script>
+  <script src="{% static 'grid_copy.js' %}?rand={{ rand }}"></script>
+  {% block stylesheets %}
+  {% endblock %}
+</head>
+
+<body>
+  <div class="content">
+    <h1>Solution to {{ title }}</h1>
+
+    <main>
+      <div class="solution-header">
+        <h4 style="float: right">
+          <a href="{% url 'puzzle' puzzle_slug %}">Back to Puzzle</a>
+        </h4>
+        <h4>Answer: {{ answer }}</h4>
+        <h4>{{ credits|safe }}</h4>
+      </div>
+      <div class='puzzle'>
+        <!-- Puzzle content begins here -->
+        {{ index_html|safe }}
+        <!-- Puzzle content ends here -->
+      </div>
+    </main>
+  </div>
+
+  {% block javascripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,48 @@
+{% extends "submit/base.tmpl" %}
+
+{% load humanize %}
+
+{% block title %}Submit Feedback: {{ puzzle.name | safe }}{% endblock %}
+
+{% block submit_content %}
+{% if complete %}
+<div class="submit-response">
+  Thanks for filling out the survey!
+</div>
+{% else %}
+<p>Your team has submitted {{ count }} survey responses for this puzzle.<br>
+Respond as many times as you like (within reason).</p>
+<form method="POST" class="submit-form">
+  {% csrf_token %}
+  Fun: <select id="fun" name="fun">
+    <option value=" " selected="selected"> </option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+  </select>
+  Difficulty: <select id="difficulty" name="difficulty">
+    <option value=" " selected="selected"> </option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+  </select><br>
+  Comments: (<span id="remaining">{{ commentlen }}</span> characters left)<br>
+  <textarea id="comment" name="comment" rows="12" style="width: 1000px" maxlength="{{ commentlen }}"></textarea><br>
+  <input id="submit" type="submit" value="Submit">
+</form>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.getElementById('comment').addEventListener('input', function() {
+  document.getElementById('remaining').textContent = this.maxLength - this.value.length;
+});
+</script>
+{% endblock %}

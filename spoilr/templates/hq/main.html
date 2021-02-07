@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+  <head>
+    <title>HQ Main</title>
+  </head>
+  <body>
+    <h2>Mystery Hunt 2021 Dashboard</h2>
+    <h3>General status pages</h3>
+    <ul>
+      <li><a href="{% url 'all_teams' %}">All Teams Dashboard</a></li>
+      <li><a href="{% url 'all_puzzles' %}">All Puzzles Dashboard</a></li>
+      <li><a href="{% url 'hq_log' 200 %}">System Log</a></li>
+      <li><a href="{% url 'hq_surveylog' 100 %}">Survey Log</a></li>
+      <li><a href="{% url 'hq_hintlog' 50 %}">Hint Log</a></li>
+      <li><a href="{% url 'solve_graph' %}">Puzzle Solve Graph</a></li>
+    </ul>
+    <h3>Queues to monitor</h3>
+    <ul>
+      <li><a href="{% url 'hq_queue' 'contact' %}">Contact HQ Queue</a></li>
+      <li><a href="{% url 'hint_queue' %}">Hint Queue</a></li>
+      <li><a href="{% url 'all_interactions_queue' %}">Interaction Queue</a></li>
+      <li><a href="{% url 'emails_queue' %}">Email Queue</a></li>
+    </ul>
+    <h3>HQ Updates</h3>
+    <ul>
+      <li><a href="{% url 'admin:spoilr_hqupdate_add' %}">Create New Update</a></li>
+      <li><a href="{% url 'hq_updates' %}">Publish Updates</a></li>
+    </ul>
+
+    <h3>Other</h3>
+    <ul>
+      <li><a href="{% url 'gatekeeper' %}">Gatekeeper</a></li>
+      <li><a href="/admin/">Django Admin</a></li>
+      <li><a href="/admin/logout/">Logout</a></li>
+    </ul>
+  </body>
+</html>

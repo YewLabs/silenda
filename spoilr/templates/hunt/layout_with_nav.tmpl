@@ -1,0 +1,237 @@
+{% extends "hunt/layout.tmpl" %}
+{% load static %}
+{% load hunt_state_tests %}
+
+{% block favicon %}
+  {% if mmo_unlocked %}
+  <link rel="icon" href="{% static 'favicon_alt.ico' %}" type="image/vnd.microsoft.icon">
+  {% else %}{{ block.super }}{% endif %}
+{% endblock %}
+
+{% block navhead %}
+  <link rel="stylesheet" type="text/css" href="{% static 'stylesheets/nav.css' %}">
+  <script src="{% static 'scripts/solve-sounds.js' %}"></script>
+  <script src="{% static 'scripts/nav.js' %}"></script>
+{% endblock %}
+
+{% block nav %}
+<nav class="navbar" {% if user.is_authenticated and not request.team.is_admin %}style="background-color: #a00"{% endif %}>
+  <ul class="navbar-list">
+    {% if not mmo_unlocked %}
+    <li class="navbar-list-item">
+      <a href="{% url 'top' %}">Mystery Hunt 2021</a>
+    </li>
+    <li class="navbar-list-item">
+      <a class="nav-links-dropdown-toggle" href="#">
+        <img src="{% static 'round.png' %}" alt="rounds">
+      </a>
+      <ul class="nav-links-dropdown-menu">
+        <a href="{% url 'top' %}">Yew Labs</a>
+      </ul>
+    </li>
+    {% else %}
+      {% if puzzle %}
+        {% if puzzle.puzzle %}
+        <li class="navbar-list-item">
+          {% if round.round.url == 'infinite-template' %}
+          <a href="{% url 'round_view' 'infinite' %}">Infinite Corridor</a>
+          {% elif round.round.url == 'nano' %}
+          <a href="{% url 'round_view' round.url %}{% if round.nano_level %}?special={{ round.nano_level }}{% endif %}">{{ round.name }}</a>
+          {% else %}
+          <a href="{% url 'round_view' puzzle.puzzle.round.url %}">{{ puzzle.puzzle.round.name }}</a>
+          {% endif %}
+        </li>
+        {% endif %}
+      {% endif %}
+      <li class="navbar-list-item"><a href="{% url 'top' %}">Campus Map</a></li>
+      {% if not team.is_limited %}
+      {% block projection %}
+      <li class="navbar-list-item"><a href="{% url 'mmo' %}">Projection Device</a></li>
+      {% endblock %}
+      {% endif %}
+      {% if rounds %}
+      <li class="navbar-list-item">
+        <a class="nav-links-dropdown-toggle" href="#">
+          <img src="{% static 'round.png' %}" alt="rounds">
+        </a>
+        <ul class="nav-links-dropdown-menu">
+        {% for round in rounds %}
+          {% if round.round.url != "backup" and round.round.url != "infinite-template" and round.round.url != "infra" %}
+          <li><a href="{% url 'round_view' round.url %}">{{ round.name }}</a></li>
+          {% endif %}
+        {% endfor %}
+        </ul>
+      </li>
+      {% endif %}
+    {% endif %}
+    <li class="navbar-list-item">
+      <a class="nav-links-dropdown-toggle" href="#">
+        <img src="{% static 'link.png' %}" alt="links">
+      </a>
+      <ul class="nav-links-dropdown-menu">
+        <li><a href="{% url 'story' %}">The Story So Far...</a></li>
+        {% if posthunt %}
+        <li><a href="{% url 'postmeta' %}">Post-Meta Interactions</a></li>
+        <li><a href="{% url 'endgame_puzzle' %}">Endgame</a></li>
+        {% endif %}
+        <hr>
+        {% if request.is_it_hunt_yet %}
+        <li><a href="{% url 'all' %}">List of Puzzles</a></li>
+        {% endif %}
+        <li><a href="{% url 'events' %}">Events Schedule</a></li>
+        {% if request.is_it_hunt_yet and not team.is_limited %}
+        <li><a href="{% url 'updates' %}">Updates from HQ</a></li>
+        <li><a href="{% url 'log' %}">Full Team Log</a></li>
+        {% endif %}
+        <hr>
+        <li><a href="{% url 'faq' %}">FAQ</a></li>
+        {% if mmo_unlocked and not team.is_limited %}
+        <li><a href="{% url 'device_message' %}">Projection Device Help</a></li>
+        {% endif %}
+        <hr>
+        <li><a href="{% url 'sponsors' %}">Sponsors</a></li>
+        {% if posthunt %}
+        <li><a href="{% url 'statistics' %}">Statistics</a></li>
+        <li><a href="{% url 'credits' %}">Credits</a></li>
+        {% endif %}
+      </ul>
+    </li>
+    {% if request.is_it_hunt_yet and not team.is_limited %}
+    <li class="navbar-list-item" id="bookmarks">
+      <a class="nav-links-dropdown-toggle" href="#">
+        <img src="{% static 'bookmark.png' %}" alt="bookmarks" id="bookmarks-icon">
+      </a>
+      <ul class="nav-links-dropdown-menu"></ul>
+    </li>
+    <li class="navbar-list-item">
+      <a class="nav-links-dropdown-toggle" href="#">
+        <img src="{% static 'sound-on.png' %}" alt="volume" id="volume-icon-on">
+        <img src="{% static 'sound-off.png' %}" alt="volume" id="volume-icon-off">
+      </a>
+      <ul class="nav-links-dropdown-menu">
+        <li>
+        <input type="range" min="0" max="200" step="5" value="100" id="volume-slider" />
+        </li>
+        <li>
+        Notification volume: <span id="volume-output"></span>%
+        </li>
+        <li class="no-bookmarks">
+        (has no effect on any audio puzzles)
+        </li>
+      </ul>
+    </li>
+    {% endif %}
+    {% if request.team.is_admin %}
+    <li class="navbar-list-item">
+      <a class="nav-links-dropdown-toggle" href="#">Admin Pages</a>
+      <ul class="nav-links-dropdown-menu">
+        <li><a href="{% url 'all_teams' %}">All Teams Dashboard</a></li>
+        <li><a href="{% url 'all_puzzles' %}">All Puzzles Dashboard</a></li>
+        <li><a href="{% url 'hq_log' 200 %}">System Log</a></li>
+        <li><a href="{% url 'hq_surveylog' 100 %}">Survey Log</a></li>
+        <li><a href="{% url 'hq_hintlog' 50 %}">Hint Log</a></li>
+        <li><a href="{% url 'solve_graph' %}">Puzzle Solve Graph</a></li>
+        <hr>
+        <li><a href="{% url 'hq_queue' 'contact' %}">Contact HQ Queue</a></li>
+        <li><a href="{% url 'hint_queue' %}">Hint Queue</a></li>
+        <li><a href="{% url 'all_interactions_queue' %}">Interaction Queue</a></li>
+        <li><a href="{% url 'emails_queue' %}">Email Queue</a></li>
+        <hr>
+        <li><a href="{% url 'admin:spoilr_hqupdate_add' %}">Create New Update</a></li>
+        <li><a href="{% url 'hq_updates' %}">Publish Updates</a></li>
+        <hr>
+        <li><a href="{% url 'gatekeeper' %}">Gatekeeper</a></li>
+        <li><a href="/admin/">Django Admin</a></li>
+        <li><a href="/admin/logout/">Logout</a></li>
+      </ul>
+    </li>
+    {% endif %}
+  </ul>
+  <div class="nav-account-panel">
+    <div style="display: inline-block">
+      <a class="nav-links-dropdown-toggle" href="#">{% if user.is_authenticated and not request.team.is_admin %}<strong>Impersonating</strong> {% endif %}{{ request.team }}</a>
+      <ul class="nav-links-dropdown-menu" style="right: 10px">
+        {% if not team.is_limited %}
+        <li><a href="{% url 'submit_contact' %}">Contact HQ</a></li>
+        <li><a href="{% url 'update_team' %}">Update Team Info</a></li>
+        {% endif %}
+        {% if user.is_authenticated and not request.team.is_admin %}
+        <li><a href="{% url 'end_impersonate' %}">Stop Impersonating</a></li>
+        {% else %}
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="nav-account-panel-team-actions">
+      {% if juice is not None %}
+        {% if next_puzzle %}
+        <div class="team-action-item">
+          <a class="nav-links-dropdown-toggle" href="#">{{ round.name }}: {{ juice }} JUICE</a>
+          <ul class="nav-links-dropdown-menu">
+            <li>Next puzzle unlocks at {{ next_puzzle }}</li>
+          </ul>
+        </div>
+        {% else %}
+        <div class="team-action-item">{{ round.name }}: {{ juice }} JUICE</div>
+        {% endif %}
+      {% elif next_puzzle %}
+      <div class="team-action-item">Next puzzle unlocks at {{ next_puzzle }}</div>
+      {% endif %}
+      {% if puzzle %}
+        {% if DEBUG and request.team.is_admin %}
+        <div class="team-action-item">
+          <a class="nav-links-dropdown-toggle" href="#">Admin Shortcuts</a>
+          <ul class="nav-links-dropdown-menu">
+            <form method="post" action="{% url 'shortcuts' %}" target="dummy">
+              {% csrf_token %}
+              {% for shortcut in shortcuts %}
+              <li><button type="submit" name="action" value="{{ shortcut.action }}" style="width: 100%">{{ shortcut.name }}</button></li>
+              {% endfor %}
+              <input name="puzzle" value="{{ puzzle.puzzle.url }}" type="hidden">
+              <iframe src="about:blank" name="dummy" style="display: none"></iframe>
+            </form>
+          </ul>
+        </div>
+        {% endif %}
+        {% if not team.is_limited %}
+        {% if puzzle.puzzle %}
+        <div class="team-action-item"><a href="{% url 'submit_survey' puzzle.puzzle.url %}">Feedback</a></div>
+        <div class="team-action-item"><a href="{% url 'submit_hint' puzzle.puzzle.url %}">Hints</a></div>
+        {% else %}
+        <div class="team-action-item"><a href="{% url 'submit_survey' puzzle.url %}">Feedback</a></div>
+        <div class="team-action-item"><a href="{% url 'submit_hint' puzzle.url %}">Hints</a></div>
+        {% endif %}
+        {% endif %}
+      {% elif extra_hints %}
+      <div class="team-action-item"><a href="{% url 'submit_hint' extra_hints %}">Hints</a></div>
+      {% endif %}
+    </div>
+  </div>
+  {% if not team.is_limited %}
+  {% if request.is_it_hunt_yet %}
+  <a href="#" id="bookmark" style="display: none" aria-label="bookmark this puzzle"></a>
+  {% if iframe_submissions %}
+  <iframe id="submit-popup"></iframe>
+  <div id="submit-popup-close">Close</div>
+  {% endif %}
+  {% endif %}
+  {% endif %}
+  <script>
+  enableDropdowns();
+  {% if not team.is_limited %}
+  enableVolumeSlider();
+  enableNotifications('{{ request.team.y2021teamdata.auth|escapejs }}');
+  {% if request.is_it_hunt_yet %}
+  {% if iframe_submissions %}enableIframes();{% endif %}
+  enableBookmarks({{% for r in rounds %}{% for p in r.all_puzzles %}{% if p.solved %}
+    '{{ p.puzzle.url|escapejs }}': true,{% endif %}{% endfor %}{% endfor %}
+  }{% if puzzle and puzzle.puzzle %}, '{{ puzzle.puzzle.url|escapejs }}', {
+    link: '{% url 'puzzle_view' puzzle.puzzle.url as url %}{{ url|escapejs }}',
+    name: '{{ puzzle.puzzle.name|escapejs }}',
+  }{% endif %});
+  {% endif %}
+  {% endif %}
+  </script>
+</nav>
+<div id="notifications"></div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "submit/base.tmpl" %}
+
+{% load humanize %}
+
+{% block title %}Contact HQ &mdash; MIT Mystery Hunt 2021{% endblock %}
+
+{% block submit_content %}
+{% if q_full2 %}
+<div class="submit-response">
+  Your team has reached the contact-hq queue limit ({{ q_lim2 }}).<br>
+  Try again after those have been resolved.
+</div>
+{% else %}
+<p>Drop us a message and someone will contact your team.</p>
+<form method="POST" class="submit-form">
+  {% csrf_token %}
+  Reason (briefly): <input id="comment" type="text" name="comment" size="70"><br>
+  Contact (Phone/Email): <input id="contact" type="text" name="contact" size="64"><br>
+  <input type="submit" value="Submit">
+</form>
+{% endif %}
+{% if requests %}
+<table style="text-align: left; width: 1000px">
+  <colgroup>
+    <col width="20%">
+    <col width="80%">
+  </colgroup>
+  {% for a in requests %}
+  <tr>
+    <td>{{ a.timestamp|naturaltime }}</td>
+    <td>{{ a.comment }}<td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

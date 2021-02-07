@@ -1,0 +1,60 @@
+{% extends "submit/base.tmpl" %}
+
+{% load humanize %}
+{% load timedelta %}
+
+{% block title %}Submit Answer: {{ puzzle.name | safe }}{% endblock %}
+
+{% block submit_content %}
+{% if not solved and not time_left %}
+<form method="POST" class="submit-form">
+  {% csrf_token %}
+  <input id="answer" type="text" name="answer" size="38" autocomplete="off">
+  <input id="submit" type="submit" value="Guess">
+</form>
+{% endif %}
+{% if response or time_left %}
+<div class="submit-response">
+  {% if response %}
+  {{ response|safe }}
+  {% else %}
+  You're guessing too fast! Try again after {{ time_left|naturalTimeDelta }}.
+  {% endif %}
+</div>
+{% endif %}
+{% if answers or extra_attempts %}
+<table style="text-align: left; width: 100%">
+  <colgroup>
+    <col width="20%">
+    <col width="70%">
+    <col width="10%">
+  </colgroup>
+  {% for a in answers %}
+  <tr>
+    <td>{{ a.timestamp|naturaltime }}</td>
+    <td class="answer">{{ a.answer }}</td>
+    {% if a.correct %}
+    <td style="color: #080; font-weight: bold;">Correct!</td>
+    {% elif not a.resolved %}
+    <td style="color: #888; font-style: italic;">(Pending)</td>
+    {% else %}
+    <td>Incorrect</td>
+    {% endif %}
+  </tr>
+  {% endfor %}
+  {% if extra_attempts %}
+  {{ extra_attempts|safe }}
+  {% endif %}
+</table>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+<script>
+if (frameElement) frameElement.style.height = document.body.firstElementChild.offsetHeight + 'px';
+if (document.forms[0]) document.forms[0].addEventListener('submit', function() {
+  document.getElementById('submit').disabled = true;
+  document.getElementById('submit').value = 'Guessing...';
+});
+</script>
+{% endblock %}

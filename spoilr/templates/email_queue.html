@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+{% load humanize %}
+{% load static %}
+<html>
+  <head>
+    <title>Email Queue</title>
+    <style>
+body {
+  font: 10pt Verdana;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+td {
+  vertical-align: top;
+  padding: 2px 6px 2px 0px;
+  overflow: hidden;
+}
+
+td.question {
+  width: 50em;
+}
+
+pre.question {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+tr:nth-child(odd) {
+  background-color: #dddddd;
+}
+
+tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+
+aside {
+  text-align: right;
+}
+
+aside form {
+  display: inline;
+}
+
+#submit-popup {
+  background-color: white;
+  border: none;
+  max-height: 40vh;
+  height: 400px;
+  width: 100%;
+  display: none;
+}
+
+#submit-popup-close {
+  position: sticky;
+  background: inherit;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px 40px;
+  font-weight: bold;
+  color: #fee638;
+  background-color: black;
+  text-align: center;
+  display: none;
+}
+
+#submit-popup-close:after {
+  content: "\2715";
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+    </style>
+
+    <script src="{% static 'scripts/jquery.min.js' %}"></script>
+    <script>
+      function setRecipient(to, sub) {
+        $("#recipient").val(to);
+        $("#subject").val("Re: " + sub);
+      }
+    </script>
+  </head>
+  <body>
+    {% if team and interaction %}
+    <h2>Emails for {{interaction.name|safe}} by {{team.name|safe}}</h2>
+    Currently viewing all emails for {{interaction.name|safe}} by {{team.name|safe}}.<br/>
+    <a href="{% url 'emails_queue' team.url %}">all emails for {{team.name|safe}}</a>.<br/>
+    <a href="{% url 'emails_queue' 'all' interaction.url %}">all emails for {{interaction.name|safe}}</a>.<br/>
+    <a href="{% url 'emails_queue' %}">Go back to email queue</a>.<br>
+    {% elif team %}
+    <h2>Emails by {{team.name|safe}}</h2>
+    Currently viewing all emails by {{team.name|safe}}.<br/>
+    <a href="{% url 'emails_queue' %}">Go back to email queue</a>.<br/>
+    {% elif interaction %}
+    <h2>Emails for {{interaction.name|safe}}</h2>
+    Currently viewing all emails for {{interaction.name|safe}}.<br/>
+    <a href="{% url 'emails_queue' %}">Go back to email queue</a>.<br/>
+    {% else %}
+    Currently viewing all emails.<br/>
+    {% endif %}
+    <a href="{% url 'hq' %}">Go back to HQ</a>.<br>
+    <div>
+      <h3>Send Email</h3>
+      <table>
+          <form action="." method="POST" onsubmit="return confirm('Are you sure you want to send this email?');">
+            {% csrf_token %}
+            <tr><td>To:</td><td><input type="text" id="recipient" name="recipient"></td></tr>
+            <tr><td>From:</td><td><input type="text" id="sender" name="sender" value="hq@perpendicular.institute"></td></tr>
+            <tr><td>Subject:</td><td><input type="text" id="subject" name="subject"></td></tr>
+            <tr><td>Body:</td><td><textarea name="body" onkeypress="return ignoreEnter(event);" type="text" size="64" style="width:512px"></textarea></td></tr>
+            <tr><td></td><td><input name="email" type="submit" value="Email"></td></tr>
+          </form>
+      </table>
+      {% if result %}
+      <h4>{{ result }}</h4>
+      {% endif %}
+    </div>
+    {% if not emails %}
+    No emails currently in the queue!  Check back later.
+    {% else %}
+    <table>
+      <tr>
+        <th style="width:10%">From</th>
+        <th style="width:10%">To</th>
+        <th style="width:10%">Time</th>
+        <th style="width:20%">Subject</th>
+        <th style="width:50%">Body</th>
+        <th>Hide</th>
+        <th>Reply</th>
+      </tr>
+      {% for email in emails %}
+      <tr>
+        <td>
+          {{ email.sender }}
+        </td>
+        <td>
+          {{ email.recipient }}
+        </td>
+        <td>
+          {{ email.received_time }}
+        </td>
+        <td>
+          {{ email.subject }}
+        </td>
+        <td>
+          {{ email.body_text }}
+        </td>
+        <td>
+          <form action="." method="POST" onsubmit="return confirm('Are you sure you want to hide this email?');">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ email.id }}">
+            <input name="hide" type="submit" value="Hide">
+          </form>
+        </td>
+        <td>
+          <button onclick="setRecipient('{{email.sender}}', '{{email.subject}}')" name="Reply" value="Reply">Reply</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </body>
+</html>

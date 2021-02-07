@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+{% load static %}
+{% load timedelta %}
+{% load scav_hunt_points %}
+<html>
+  <head>
+    <title>One Team Dashboard: {{ team.name }}</title>
+    <style>
+body {
+  font: 10pt monospace;
+}
+
+table {
+  margin-left: 20px;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 0px 10px;
+  vertical-align: top;
+}
+
+.solved {
+  background: #dfd;
+}
+
+.unsolved {
+  background: #fdd;
+}
+    </style>
+  </head>
+  <body>
+    {% include "hq/topright.html" with auto_refresh=False %}
+    <img style="float: left" height="120" src="{{ team.y2021teamdata.emoji }}">
+    <b>Team</b>: <b>{{ team.name }}</b><br>
+    <b>Email</b>: {{ team.email }}<br>
+    <b>Phone</b>: {{ team.phone }}<br>
+    <b>Size</b>: {{ team.size_desc }}
+    (<b>Scav hunt points</b>: {{ team.size_int|scav_hunt_points }})<br>
+    <b>Tempest ID</b>: {{ team.y2021teamdata.tempest_id }}<br>
+    <b>Hints</b>: {{ hints }}<br>
+    <b>JUICE</b>: {{ team.y2021teamdata.base_juice }}<br>
+    <b>Cafe Five</b>: <a href="{% url 'cafe_admin' team.url %}">Cafe Admin</a><br>
+    <b>Impersonate</b>: <a href="{% url 'impersonate' team.url %}">Impersonate Team</a> (remember to logout before doing other things on the main site)<br>
+    <b>Rounds</b>:
+    <table>
+      {% for x in rounds %}
+      <tr {% if x.access %}class="solved"{% endif %}>
+        <td><a href="{% url 'round_view' x.round.url %}">{{ x.round.name }}</a></td>
+        <td>
+          {% if x.access %}
+          Released {{ x.access.timestamp|date:'D H:i:s' }}
+          {% else %}
+          Not Released
+          {% endif %}
+        </td>
+        <td>
+          {% if x.juice is not None %}
+          {{ x.juice }} JUICE
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <b>Metapuzzles</b>:
+    <table>
+      {% for x in puzzles %}
+      {% if x.puzzle.is_meta %}
+      <tr {% if x.access and x.access.solved %}class="solved"{% else %}class="unsolved"{% endif %}>
+        <td><a href="{% url 'puzzle_view' x.puzzle.url %}">{{ x.puzzle.name }}</a></td>
+        <td>
+          {% if x.access and x.access.solved %}
+          Solved
+          {% elif x.access and x.access.found %}
+          Found {{ x.access.found_timestamp|date:'D H:i:s' }}
+          {% elif x.access %}
+          Released {{ x.access.timestamp|date:'D H:i:s' }}
+          {% else %}
+          Not Released
+          {% endif %}
+        </td>
+        <td>{% if x.access.solved %}{{ x.puzzle.answer }}{% endif %}</td>
+        <td>{% if x.stime %}{{ x.stime|naturalTimeDelta }}{% endif %}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </table>
+    <b>Interactions</b>:
+    <table>
+      {% for x in interactions %}
+      <tr {% if x.access and x.access.accomplished %}class="solved"{% elif x.access %}class="unsolved"{% endif %}>
+        <td>{{ x.interaction.name }}</td>
+        <td>
+          {% if x.access and x.access.accomplished %}
+          Accomplished
+          {% elif x.access %}
+          Ready
+          {% else %}
+          Not Ready
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <b>Puzzles</b>:
+    <table>
+      {% for x in puzzles %}
+      {% if not x.puzzle.is_meta %}
+      <tr {% if x.access and x.access.solved %}class="solved"{% elif x.access %}class="unsolved"{% endif %}>
+        <td><a href="{% url 'round_view' x.puzzle.round.url %}">{{ x.puzzle.round.name }}</a></td>
+        {% if x.access and not x.access.found %}
+        <td><a href="{% url 'admin_find' team.url x.puzzle.url %}">{{ x.puzzle.name|truncatechars:50 }}</a></td>
+        {% else %}
+        <td><a href="{% url 'puzzle_view' x.puzzle.url %}">{{ x.puzzle.name|truncatechars:50 }}</a></td>
+        {% endif %}
+        <td>
+          {% if x.access and x.access.solved %}
+          Solved
+          {% elif x.access and x.access.found %}
+          Found {{ x.access.found_timestamp|date:'D H:i:s' }}
+          {% elif x.access %}
+          Released {{ x.access.timestamp|date:'D H:i:s' }}
+          {% else %}
+          Not Released
+          {% endif %}
+        </td>
+        <td>{% if x.access.solved %}{{ x.puzzle.answer }}{% endif %}</td>
+        <td>{% if x.stime %}{{ x.stime|naturalTimeDelta }}{% endif %}</td>
+        <td>{% if x.hints %}{{ x.hints }} hint{{x.hints|pluralize}}{% endif %}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </table>
+    <b>Surveys</b>:
+    <table>
+      {% for x in surveys %}
+      <tr>
+        <td>{{ x.timestamp|date:'D H:i:s' }}</td>
+        <td><a href="{% url 'puzzle_view' x.puzzle.url %}">{{ x.puzzle.name|truncatechars:50 }}</a></td>
+        <td>f:{{ x.fun }}</td>
+        <td>d:{{ x.difficulty }}</td>
+        <td>{{ x.comment }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>

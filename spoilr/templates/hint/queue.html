@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+{% load humanize %}
+{% load static %}
+<html>
+  <head>
+    <title>Hint Queue</title>
+    <style>
+body {
+  font: 10pt Verdana;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+td {
+  vertical-align: top;
+  padding: 2px 6px 2px 0px;
+  overflow: hidden;
+}
+
+td.question {
+  width: 50em;
+}
+
+pre.question, .question pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+tr:nth-child(odd) {
+  background-color: #dddddd;
+}
+
+tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+
+aside {
+  text-align: right;
+}
+
+aside form {
+  display: inline;
+}
+
+#submit-popup {
+  background-color: white;
+  border: none;
+  max-height: 40vh;
+  height: 400px;
+  width: 100%;
+  display: none;
+}
+
+#submit-popup-close {
+  position: sticky;
+  background: inherit;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px 40px;
+  font-weight: bold;
+  color: #fee638;
+  background-color: black;
+  text-align: center;
+  display: none;
+}
+
+#submit-popup-close:after {
+  content: "\2715";
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+    </style>
+
+    <script src="{% static 'scripts/jquery.min.js' %}"></script>
+  </head>
+  <body>
+    <aside>
+      {% if handler %}
+      Signed in as {{ handler.name }}{% if handler.hq_phone %}, using {{ handler.hq_phone }}{% endif %}
+      <form action="." method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="offduty" value="true">
+        <input type="submit" value="I'm off duty">
+      </form>
+      {% else %}
+      <form action="{% url 'hq_queue' %}" method="POST">
+        {% csrf_token %}
+	<input id="next" type="hidden" name="next" value="/hq/hint/"/><br/>
+        Observing only.  Enter your discord username:
+        <input id="email" type="text" size="30" name="email"><br>
+        and your phone number (to contact you in case of emergency):
+        <input id="phone" type="text" size="30" name="phone"><br>
+        to sign in as a handler:
+        <input id="go" type="submit" value="Go">
+      </form>
+      {% endif %}
+      <a href="{% url 'hq' %}">Back to HQ Main</a>
+    </aside>
+  <iframe id="submit-popup"></iframe>
+  <div id="submit-popup-close">Close</div>
+    {% if team %}
+    <h2>Hints for {{puzzle.name|safe}} by {{team.name|safe}}</h2>
+    Currently viewing all hints for {{puzzle.name|safe}} by {{team.name|safe}}.
+    <a href="{% url 'hint_queue' puzzle.url %}">all hints for {{puzzle.name|safe}}</a>.<br>
+    <a href="{% url 'hint_queue' %}">Go back to hint queue</a>.<br>
+    {% elif puzzle %}
+    <h2>Hints for {{puzzle.name|safe}}</h2>
+    Currently viewing all hints for {{puzzle.name|safe}}.
+    <a href="{% url 'hint_queue' %}">Go back to hint queue</a>.<br>
+    {% else %}
+    <h2>Hints queue</h2>
+    <a href="{% url 'hint_queue' 100 %}">Short log</a>
+    <a href="{% url 'hint_queue' 'all' %}">Full log</a><br>
+    {% endif %}
+    {% if not questions %}
+    No hints currently in the queue!  Check back later.
+    {% else %}
+    <table>
+      <tr>
+        <th style="min-width: 12em;">Puzzle</th>
+        <th class="question">Question</th>
+        <th>Claimant</th>
+        <th>Response</th>
+      </tr>
+      {% for question in questions %}
+      <tr>
+        <td>
+          <a href="{% url 'puzzle_view' question.puzzle.url %}" target="_blank">{{question.puzzle}}</a><br>
+          (<a href="{% url 'puzzle_solution' question.puzzle.url %}" target="_blank">solution</a>)
+          (<a href="{% url 'puzzle_hints' question.puzzle.url %}" class="canned_hints" target="_blank">hints</a>)
+          (<a href="{% url 'hint_queue' question.puzzle.url %}">hint log</a>)<br>
+          (<a href="{% url 'hint_queue' question.puzzle.url question.team.url %}">team hint log</a>)<br>
+          <a href="{% url 'one_team' question.team.url %}" target="_blank">{{question.team}}</a><br>
+          {{question.timestamp|naturaltime}}
+        </td>
+        <td class="question">
+          {% if question.question.splitlines|length > 1 %}
+          <pre>{{ question.question }}</pre>
+          {% else %}
+          {{ question.question }}
+          {% endif %}
+        </td>
+        <td>
+          {% if question.resolved %}
+          {{question.claimant}}, {{question.claim_time|naturaltime}}
+          {% elif question.claimant and question.claimant == handler.email %}
+          <form action="." method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{question.id}}">
+            <input type="hidden" name="lastclaim" value="{{question.claim_time.isoformat}}">
+            <input type="hidden" name="claimant" value="{{handler.email}}">
+            <input name="Unclaim" type="submit" value="Unclaim">
+          </form>
+          {% elif question.claimant %}
+          {{question.claimant}}, {{question.claim_time|naturaltime}}
+          {% elif handler.email %}
+          <form action="." method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{question.id}}">
+            <input type="hidden" name="lastclaim" value="{{question.claim_time.isoformat}}">
+            <input type="hidden" name="claimant" value="{{handler.email}}">
+            <input name="Claim" type="submit" value="Claim">
+          </form>
+          {% endif %}
+        </td>
+        <td>
+          {% if question.resolved %}
+          ({{question.result}})
+          {% elif handler.email and question.claimant  == handler.email %}
+          <form action="." method="POST" onsubmit="return onSubmit(event);">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{question.id}}">
+            <input type="hidden" name="lastclaim" value="{{question.claim_time.isoformat}}">
+            <textarea name="response" onkeypress="return ignoreEnter(event);" type="text" size="64" style="width:512px"></textarea><br>
+            <input name="submit" type="submit" value="Submit">
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    <script type="text/javascript">
+function ignoreEnter(e) {
+  if (e.which == 13) {
+    e.stopPropagation();
+  }
+}
+function onSubmit(e) {
+  if (document.getElementsByName("response")[0].value.length < 2) {
+    e.stopPropagation();
+    e.preventDefault();
+    return false;
+  }
+}
+{% if not questions %}
+function r() {
+  {% if not handler %}
+  var ae = document.activeElement;
+  if (ae.nodeName == 'INPUT' || ae.nodeName == 'SELECT')
+    return;
+  {% endif %}
+  window.location.reload(true);
+}
+setInterval(r, 10000);
+{% endif %}
+
+$('.canned_hints').click(function(evt) {
+  evt.preventDefault();
+  var target_url = this.getAttribute('href');
+  if ($('#submit-popup').attr('src') == target_url) {
+    $('#submit-popup,#submit-popup-close').toggle();
+  } else {
+    $('#submit-popup').attr('src', target_url).show();
+    $('#submit-popup-close').show();
+  }
+  $('.nav-links-dropdown-menu').hide();
+});
+
+$('#submit-popup-close').click(function() {
+  $('#submit-popup,#submit-popup-close').hide();
+});
+
+
+    </script>
+  </body>
+</html>

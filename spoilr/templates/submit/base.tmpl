@@ -1,0 +1,40 @@
+{% extends embedded|yesno:"hunt/layout.tmpl,hunt/layout_with_nav.tmpl" %}
+
+{% block stylesheets %}
+<style>
+{% if embedded %}
+html, body {
+  background: none;
+  min-width: 0;
+  height: auto;
+}
+{% endif %}
+.content {
+  text-align: center;
+  padding-bottom: 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+  {% if not embedded %}
+  <h1>
+    {% block title %}{% endblock %}
+    <div class="subtitle">
+      Team: {{ request.team.name }}<br>
+      {% if puzzle and puzzle.url != 'device' %}
+      Puzzle: <a href="{% url 'puzzle_view' puzzle.url %}">{{ puzzle.name }}</a>
+      {% endif %}
+    </div>
+  </h1>
+  <main>
+    <div class="info">
+  {% endif %}
+  {% block submit_content %}{% endblock %}
+  {% if not embedded %}
+    </div>
+  </main>
+  {% endif %}
+</div>
+{% endblock %}

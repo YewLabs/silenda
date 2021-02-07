@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+  <head>
+    <title>Solve Graph</title>
+    <script src="{% static 'scripts/jquery.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+  </head>
+  <body>
+
+  {{ solve_counts_for_chartjs|json_script:"solve-counts" }}
+
+  <script>
+  const startTimestamp = 1610730000000 + (2 * 24) * 60 * 60 * 1000; // 12 pm EST Friday the 15th
+  const endTimestamp = 1610730000000 + (3 * 24 - 2) * 60 * 60 * 1000; // 12 pm EST Friday the 15th
+
+  // UTC offset to EST.
+  const timezoneOffset = 60 * 60 * 1000 * 5;
+
+  function refreshGraph(threshold) {
+    const solveCounts = JSON.parse(document.getElementById('solve-counts').textContent);
+
+    const numSolves = [];
+    for (let i = 0; i < solveCounts.datasets.length; i++) {
+      numSolves.push(solveCounts.datasets[i].data[solveCounts.datasets[i].data.length-1].y);
+    }
+
+    solveCounts.datasets = solveCounts.datasets.filter((d, i) => numSolves[i] >= threshold);
+    solveCounts.point_labels = solveCounts.point_labels.filter((d, i) => numSolves[i] >= threshold);
+
+    solveCounts.datasets.forEach((o) => {
+      o.lineTension = 0;
+      o.steppedLine = true;
+    });
+
+    let canvas = $("<canvas>")
+      .attr("id", "solve-chart-canvas")
+      .attr("width", "1600")
+      .attr("width", "900");
+
+    // chartjs creates a couple other elements in the container with event
+    // handlers it sets up, so we need to clear those out before we try to
+    // render the chart again inside the same container
+    $(".chart-container")
+      .empty()
+      .append(canvas);
+
+    new Chart(canvas[0], {
+      type: 'line',
+      data: solveCounts,
+      options: {
+        scales: {
+          xAxes: [{
+            type: 'time',
+            ticks: {
+              min: startTimestamp + timezoneOffset,
+              max: endTimestamp + timezoneOffset,
+              maxTicksLimit: 20,
+            },
+            time: {
+              unit: 'hour',
+              displayFormats: {
+                hour: 'ddd hA'
+              },
+              parser: function (d) {
+                return moment(d - timezoneOffset);
+              },
+            },
+            position: 'bottom',
+          }],
+          yAxes: [{
+            ticks: {
+              beginAtZero: true
+            }
+          }]
+        },
+        tooltips: {
+          callbacks: {
+            label: function(tooltipItem, data) {
+              return solveCounts.point_labels[tooltipItem.datasetIndex][tooltipItem.index];
+            }
+          }
+        }
+      }
+    });
+  }
+
+  $(() => {
+    refreshGraph(parseInt($('#min-solves')[0].value));
+
+    $("#min-solves").change((e) => {
+      refreshGraph(parseInt(e.target.value));
+    });
+  });
+  </script>
+
+  <h2>Puzzle Solve Graph</h2>
+  <p>Show teams with at least <input id="min-solves" type="number" min="1" value="5"></input> solves</p>
+  <div class="chart-container" style="position: relative; height:900px; width:1600px"></div>
+
+  </body>
+</html>

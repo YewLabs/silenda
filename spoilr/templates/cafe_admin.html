@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% load humanize %}
+{% load static %}
+<html>
+  <head>
+    <title>Cafe Admin for {{ team.name }}</title>
+    <script src="{% static 'scripts/jquery.min.js' %}"></script>
+  </head>
+  <body>
+    <center>
+      <h1>Team {{ team.name }}: {{ completions }} Completions, {{ redemptions }} Redemptions</h1>
+      <h2>{{ status }}</h2>
+      {% if available %}
+      <h2>Team {{ team.name }} has tokens available.</h2>
+      <form action="." method="POST" onsubmit="return confirm('Are you sure you want to redeem a token?');">
+        {% csrf_token %}
+        <input name="redeem" type="submit" value="Redeem">
+      </form>
+      {% else %}
+      <h2>Team {{ team.name }} has no tokens available.</h2>
+      {% endif %}
+      {% if available %}
+      <p>
+        <h2>Lookup Infinite Answer</h2>
+        <form action="." method="POST">
+          {% csrf_token %}
+          Infinite ID: <input type="number" name="infinite">
+          <input name="lookup" type="submit" value="Lookup">
+        </form>
+      </p>
+      {% endif %}
+      <a href="{% url 'one_team' team.url %}">Back to Team</a><br/>
+      <a href="{% url 'hq' %}">Back to HQ Main</a>
+    </center>
+  </body>
+</html>

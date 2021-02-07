@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hint Log</title>
+    <style>
+body {
+  font: 10pt Verdana;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+td, th {
+  padding: 2px 8px;
+  white-space: nowrap;
+  text-align: left;
+}
+
+td.text {
+  width: 100em;
+  white-space: initial;
+  font-size: 10px;
+}
+    </style>
+  </head>
+  <body>
+    {% include "hq/topright.html" with auto_refresh=True unchecked=False interval=30000 %}
+    Filter: <input id="filter">
+    {% if limit %}
+    <b>This is the short log</b>, for the full log see <a href="{% url 'hq_hintlog' %}">here</a>.<br>
+    {% endif %}
+    <script>
+const element = document.getElementById('filter');
+element.value = decodeURIComponent(location.hash.replace(/^#/, ''));
+    </script>
+    <table id="entries">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Team URL</th>
+          <th>Puzzle</th>
+          <th>Claimant</th>
+          <th>Claim Time</th>
+          <th>Question</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      {% for e in entries %}
+      <tr class="entry">
+<td>{{ e.timestamp|date:'D H:i:s' }}</td>
+<td>{{ e.team.url }}</td>
+<td>{{ e.puzzle.name|safe }}</td>
+<td>{{ e.claimant }}</td>
+<td>{{ e.claim_time|date:'D H:i:s' }}</td>
+<td class="text">{{ e.question }}</td>
+<td class="text">{{ e.result }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <script>
+function applyFilter() {
+  const re = element.value && new RegExp(element.value, 'ims');
+  for (const row of document.getElementById('entries').tBodies[0].rows)
+    row.style.display = (!re || re.test(row.textContent)) ? '' : 'none';
+}
+element.addEventListener('input', () => {
+  history.replaceState(null, '', element.value ? '#' + element.value : '.');
+  applyFilter();
+});
+if (element.value) {
+  element.focus();
+  applyFilter();
+}
+    </script>
+  </body>
+</html>

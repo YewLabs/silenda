@@ -1,0 +1,8 @@
+<noscript>
+  <a href="{{ redirect }}" target="_parent">Continue to {{ redirect }}</a>
+</noscript>
+<script>
+setTimeout(function() {
+  window.parent.location.href = "{{ redirect }}";
+}, 5000);
+</script>

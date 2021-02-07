@@ -1,0 +1,36 @@
+<p>
+  <h3>Interactions:</h3>
+  Register that one or more teams have accomplished an interaction.<br>
+  <a href="{% url 'hq' %}">Back to admin</a>
+  <hr>
+  <h4>Pending Interactions:</h4>
+  {% if pending %}
+  &nbsp;&nbsp;&nbsp;
+  <table>
+  {% for i in interactions %}
+  {% if i.interaction.url != 'mmo-unlock' %}
+  {% if i.pending|length %}
+  <tr>
+    <td>
+      <a href="{% url 'interaction_queue' i.interaction.url %}">{{i.interaction.name}} ({{i.pending|length}} teams)</a>
+    </td>
+  </tr>
+  {% endif %}
+  {% endif %}
+  {% endfor %}
+  </table>
+  {% else %}
+  <em>No pending interactions</em>
+  {% endif %}
+  <hr>
+  <h4>All Interactions:</h4>
+  <table>
+    {% for i in interactions %}
+    <tr>
+      <td>
+        <a href="{% url 'interaction_queue' i.interaction.url %}">{{i.interaction.name}} ({{i.pending|length}} teams)</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+</p>

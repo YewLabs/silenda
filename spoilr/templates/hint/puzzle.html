@@ -1,0 +1,51 @@
+{% extends "submit/base.tmpl" %}
+
+{% load humanize %}
+{% load timedelta %}
+
+{% block title %}Ask the Lab: {{ puzzle.name | safe }}{% endblock %}
+
+{% block submit_content %}
+{% if not hint_available %}
+<div class="submit-response">
+  {% if hit_quota %}
+  You have hit your quota for unresolved hint requests.
+  You can submit another hint once a request has been resolved.
+  {% elif time_left %}
+  You do not have hints available for this puzzle yet.
+  You have {{ time_left|naturalTimeDelta }}.
+  {% else %}
+  Hints are not available for this puzzle yet.
+  {% endif %}
+</div>
+{% else %}
+{% if puzzle.url != 'device' %}
+<p>You may occasionally ask any question about the puzzle.
+You may have one hint open across all puzzles at a time.</p>
+{% endif %}
+<form method="POST" class="submit-form">
+  {% csrf_token %}
+  <textarea id="question" name="question" style="width: 1000px" rows="2"></textarea><br>
+  Notification email (optional): <input id="email" name="email" size="38" type="text">
+  <input id="submit" type="submit" value="Ask the Lab"><br>
+  The answer will also appear on this page. You may want to use an
+  <a href="http://newtech.about.com/od/mobile/a/Sms-Gateway-From-Email-To-Sms-Text-Message.htm">SMS gateway</a> email.<br>
+</form>
+{% endif %}
+{% if hints %}
+<table style="text-align: left; width: 1000px; border: 1px solid black">
+  <colgroup>
+    <col width="20%">
+    <col width="40%">
+    <col width="40%">
+  </colgroup>
+  {% for h in hints %}
+  <tr>
+    <td>{{ h.timestamp|naturaltime }}</td>
+    <td>{{ h.question|linebreaks }}</td>
+    <td>{{ h.result|linebreaks }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

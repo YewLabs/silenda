@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Survey Log</title>
+    <style>
+body {
+  font: 10pt Verdana;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+td, th {
+  padding: 2px 8px;
+  white-space: nowrap;
+  text-align: left;
+  max-width: 10em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+td:last-child {
+  width: 100em;
+  max-width: none;
+  white-space: initial;
+}
+    </style>
+  </head>
+  <body>
+    {% include "hq/topright.html" with auto_refresh=True unchecked=True interval=30000 %}
+    Filter: <input id="filter">
+    {% if limit %}
+    <b>This is the short log</b>, for the full log see <a href="{% url 'hq_surveylog' %}">here</a>.<br>
+    {% endif %}
+    <script>
+const element = document.getElementById('filter');
+element.value = decodeURIComponent(location.hash.replace(/^#/, ''));
+    </script>
+    <table id="entries">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Team</th>
+          <th>Puzzle</th>
+          <th>Fun</th>
+          <th>Difficulty</th>
+          <th>Comment</th>
+        </tr>
+      </thead>
+      {% for e in entries %}
+      <tr class="entry">
+<td>{{ e.timestamp|date:'D H:i:s' }}</td>
+<td><a href="{% url 'one_team' e.team.url %}">{{ e.team.url }}</a></td>
+<td><a href="{% url 'puzzle_view' e.puzzle.url %}">{{ e.puzzle.name|safe }}</a></td>
+<td>{{ e.fun }}</td>
+<td>{{ e.difficulty }}</td>
+<td>{{ e.comment|linebreaks }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <script>
+function applyFilter() {
+  const re = element.value && new RegExp(element.value, 'ims');
+  for (const row of document.getElementById('entries').tBodies[0].rows)
+    row.style.display = (!re || re.test(row.textContent)) ? '' : 'none';
+}
+element.addEventListener('input', () => {
+  history.replaceState(null, '', element.value ? '#' + element.value : '.');
+  applyFilter();
+});
+if (element.value) {
+  element.focus();
+  applyFilter();
+}
+    </script>
+  </body>
+</html>
